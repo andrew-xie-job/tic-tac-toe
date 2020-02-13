@@ -1,0 +1,6 @@
+info.app:
+  version: "@project.version@"
+  name: "Tic Tac Toc"
+
+logging:
+  config: classpath:logback.xml
