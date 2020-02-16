@@ -10,6 +10,8 @@ import com.andrew.solutions.tictactoe.dto.RequestMoveDTO;
 import com.andrew.solutions.tictactoe.exceptions.InvalidGameException;
 import com.andrew.solutions.tictactoe.service.GameService;
 import com.andrew.solutions.tictactoe.service.MoveService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/tictactoe/api/v1/move")
+@Api(value="Move logic API")
 public class MoveController {
     Logger LOGGER = LoggerFactory.getLogger(MoveController.class);
 
@@ -37,6 +40,7 @@ public class MoveController {
     }
 
     @RequestMapping(value = "/play", method = RequestMethod.POST)
+    @ApiOperation(value = "Player make a move")
     public GameStatus createMove(@RequestBody RequestMoveDTO requestMoveDTO) {
         Long gameId = (Long) httpSession.getAttribute("gameId");
         Row row = Row.from(requestMoveDTO.getBoardRow());
@@ -50,7 +54,8 @@ public class MoveController {
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public List<Coordination> getPlayers() {
+    @ApiOperation(value = "List all moves in the game")
+    public List<Coordination> getAllMoves() {
         Long gameId = (Long) httpSession.getAttribute("gameId");
         Game game = gameService.getGameById(gameId)
                 .orElseThrow(()-> new InvalidGameException("The GameId: " + gameId + " cannot be found"));
@@ -58,6 +63,7 @@ public class MoveController {
     }
 
     @RequestMapping(value = "/player/{piece}", method = RequestMethod.GET)
+    @ApiOperation(value = "List all moves of one player in the game")
     public List<Coordination> getPlayerMoves(@PathVariable Piece piece) {
         Long gameId = (Long) httpSession.getAttribute("gameId");
         Game game = gameService.getGameById(gameId)
@@ -66,6 +72,7 @@ public class MoveController {
     }
 
     @RequestMapping(value = "/status", method = RequestMethod.GET)
+    @ApiOperation(value = "Check current game status")
     public GameStatus getGameStatus() {
         Long gameId = (Long) httpSession.getAttribute("gameId");
         Game game = gameService.getGameById(gameId)

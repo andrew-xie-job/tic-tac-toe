@@ -1,6 +1,6 @@
 package com.andrew.solutions.tictactoe.config;
 
-import com.andrew.solutions.tictactoe.Repository.PlayerRepository;
+import com.andrew.solutions.tictactoe.repository.PlayerRepository;
 import com.andrew.solutions.tictactoe.domain.Player;
 import com.andrew.solutions.tictactoe.security.ContextUser;
 import org.springframework.beans.factory.annotation.Autowired;

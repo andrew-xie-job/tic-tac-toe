@@ -1,4 +1,4 @@
-package com.andrew.solutions.tictactoe.Repository;
+package com.andrew.solutions.tictactoe.repository;
 
 import com.andrew.solutions.tictactoe.domain.Player;
 import org.springframework.stereotype.Component;

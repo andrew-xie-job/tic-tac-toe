@@ -1,6 +1,6 @@
 package com.andrew.solutions.tictactoe.service;
 
-import com.andrew.solutions.tictactoe.Repository.PlayerRepository;
+import com.andrew.solutions.tictactoe.repository.PlayerRepository;
 import com.andrew.solutions.tictactoe.domain.Player;
 import com.andrew.solutions.tictactoe.dto.RequestPlayerDTO;
 import org.junit.jupiter.api.BeforeEach;
