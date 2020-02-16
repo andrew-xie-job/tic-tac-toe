@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
@@ -41,6 +42,7 @@ public class MoveController {
 
     @RequestMapping(value = "/play", method = RequestMethod.POST)
     @ApiOperation(value = "Player make a move")
+    @ResponseStatus(HttpStatus.CREATED)
     public GameStatus createMove(@RequestBody RequestMoveDTO requestMoveDTO) {
         Long gameId = (Long) httpSession.getAttribute("gameId");
         Row row = Row.from(requestMoveDTO.getBoardRow());
@@ -62,7 +64,7 @@ public class MoveController {
         return moveService.getMovesInGame(game);
     }
 
-    @RequestMapping(value = "/player/{piece}", method = RequestMethod.GET)
+    @RequestMapping(value = "/list/{piece}", method = RequestMethod.GET)
     @ApiOperation(value = "List all moves of one player in the game")
     public List<Coordination> getPlayerMoves(@PathVariable Piece piece) {
         Long gameId = (Long) httpSession.getAttribute("gameId");

@@ -8,7 +8,6 @@ import com.google.common.net.HttpHeaders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
@@ -31,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = {PlayerController.class, PlayerService.class, TestConfig.class})
 @WebMvcTest
 public class PlayerControllerTest {
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -65,6 +65,5 @@ public class PlayerControllerTest {
                 .content("{\"userName\":\"user\", \"password\":\"password\"}"))
                 .andExpect(status().isCreated());
     }
-
 
 }
