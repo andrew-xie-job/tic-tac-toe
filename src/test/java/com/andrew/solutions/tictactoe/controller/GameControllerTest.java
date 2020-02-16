@@ -1,16 +1,10 @@
 package com.andrew.solutions.tictactoe.controller;
 
-
 import com.andrew.solutions.tictactoe.TestConfig;
-import com.andrew.solutions.tictactoe.domain.Coordination;
 import com.andrew.solutions.tictactoe.domain.Game;
 import com.andrew.solutions.tictactoe.domain.Player;
-import com.andrew.solutions.tictactoe.domain.enums.Column;
-import com.andrew.solutions.tictactoe.domain.enums.GameStatus;
-import com.andrew.solutions.tictactoe.domain.enums.Piece;
-import com.andrew.solutions.tictactoe.domain.enums.Row;
 import com.andrew.solutions.tictactoe.service.GameService;
-import com.andrew.solutions.tictactoe.service.MoveService;
+import com.andrew.solutions.tictactoe.service.PlayerService;
 import com.google.common.net.HttpHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
@@ -36,89 +31,94 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {MoveController.class, MoveService.class, TestConfig.class, GameService.class})
+@ContextConfiguration(classes = {GameController.class, TestConfig.class, GameService.class})
 @WebMvcTest
-public class MoveControllerTest {
+public class GameControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    private String baseUrl = "/tictactoe/api/v1/move";
+    private String baseUrl = "/tictactoe/api/v1/game";
+
+    private Game game;
 
     @MockBean
     private GameService gameService;
 
     @MockBean
-    private MoveService moveService;
-
-    private Game game;
+    private PlayerService playerService;
 
     @BeforeEach
-    public void setup() {
+    public void setUp() {
         game = new Game(1L, new Player("user", "pass"));
+        when(playerService.getLoggedUser()).thenReturn(Optional.of(new Player("user2", "pass")));
     }
 
     @Test
     @WithMockUser(username = "test", password = "test", roles = "USER")
-    public void shouldGetAllMoves() throws Exception {
-        when(gameService.getGameById(anyLong())).thenReturn(Optional.of(game));
-        given(moveService.getMovesInGame(game)).willReturn(Arrays.asList(
-                new Coordination(Row.R1, Column.C1),
-                new Coordination(Row.R3, Column.C2)));
-
-        mockMvc.perform(get(baseUrl + "/list").sessionAttr("gameId", 1L)
-                .accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
-                .andExpect(jsonPath("$.[0].row").value("R1"))
-                .andExpect(jsonPath("$.[0].column").value("C1"))
-                .andReturn();
-    }
-
-    @Test
-    @WithMockUser(username = "test", password = "test", roles = "USER")
-    public void shouldGetPlayerMoves() throws Exception {
-        when(gameService.getGameById(anyLong())).thenReturn(Optional.of(game));
-        given(moveService.getPlayerMoves(game, Piece.O)).willReturn(Arrays.asList(
-                new Coordination(Row.R1, Column.C1),
-                new Coordination(Row.R3, Column.C2)));
-
-        mockMvc.perform(get(baseUrl + "/list/O").sessionAttr("gameId", 1L)
-                .accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
-                .andExpect(jsonPath("$.[0].row").value("R1"))
-                .andExpect(jsonPath("$.[0].column").value("C1"))
-                .andReturn();
-    }
-
-    @Test
-    @WithMockUser(username = "test", password = "test", roles = "USER")
-    public void shouldGetGameStatus() throws Exception {
-        when(gameService.getGameById(anyLong())).thenReturn(Optional.of(game));
-        given(moveService.checkGameStatus(game)).willReturn(GameStatus.IN_PROGRESS);
-
-        mockMvc.perform(get(baseUrl + "/status").sessionAttr("gameId", 1L)
-                .accept(MediaTypes.HAL_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
-                .andExpect(jsonPath("$.gameStatus").value("IN_PROGRESS"))
-                .andReturn();
-    }
-
-    @Test
-    @WithMockUser(username = "test", password = "test", roles = "USER")
-    public void shouldCreateMove() throws Exception {
-        when(gameService.getGameById(anyLong())).thenReturn(Optional.of(game));
-
-        mockMvc.perform(post(baseUrl +"/play").sessionAttr("gameId", 1L).with(csrf())
+    public void createGame() throws Exception {
+        when(gameService.createGame(any())).thenReturn(game);
+        mockMvc.perform(post(baseUrl +"/create").with(csrf())
                 .contentType(MediaTypes.HAL_JSON_VALUE)
-                .content("{\"boardColumn\":0, \"boardRow\":0}"))
+                .content("{}"))
                 .andExpect(status().isCreated());
     }
 
+    @Test
+    @WithMockUser(username = "test", password = "test", roles = "USER")
+    public void getGamesToJoin() throws Exception {
+        given(gameService.getAllWaitingGames()).willReturn(Arrays.asList(
+                new Game(2L, new Player("user2", "pass")),
+                new Game(3L, new Player("user1", "pass"))));
+        mockMvc.perform(get(baseUrl + "/join/list")
+                .accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
+                .andExpect(jsonPath("$.[0].id").value(2))
+                .andExpect(jsonPath("$.[0].currentPiece").value("X"))
+                .andReturn();
+    }
+
+    @Test
+    @WithMockUser(username = "test", password = "test", roles = "USER")
+    public void getGames() throws Exception {
+        given(gameService.getAllGames()).willReturn(Arrays.asList(
+                new Game(2L, new Player("user2", "pass")),
+                new Game(3L, new Player("user1", "pass"))));
+        mockMvc.perform(get(baseUrl + "/list")
+                .accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
+                .andExpect(jsonPath("$.[0].id").value(2))
+                .andExpect(jsonPath("$.[0].currentPiece").value("X"))
+                .andReturn();
+    }
+
+    @Test
+    @WithMockUser(username = "test", password = "test", roles = "USER")
+    public void joinGame() throws Exception {
+        when(gameService.joinGame(any(),anyLong())).thenReturn(game);
+        mockMvc.perform(post(baseUrl +"/join").with(csrf())
+                .contentType(MediaTypes.HAL_JSON_VALUE)
+                .content("{\"id\":0}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "test", password = "test", roles = "USER")
+    public void getGameById() throws Exception {
+        when(gameService.getGameById(anyLong())).thenReturn(Optional.of(game));
+        mockMvc.perform(get(baseUrl + "/1")
+                .accept(MediaTypes.HAL_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.currentPiece").value("X"))
+                .andReturn();
+    }
 }
