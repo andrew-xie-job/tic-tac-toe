@@ -12,3 +12,6 @@ There are two predefined users (username:password):
 
 Swagger API URL:
 http://localhost:8080/swagger-ui.html
+
+
+Trigger a jenkis build
